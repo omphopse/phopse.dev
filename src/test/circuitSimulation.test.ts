@@ -1,5 +1,5 @@
 import { describe, expect, it } from 'vitest'
-import { advanceRace, CIRCUIT_LENGTH, CIRCUIT_SAMPLES, createRace, getCarPose, sampleCircuit } from '../lib/circuitSimulation'
+import { advanceRace, CIRCUIT_LENGTH, CIRCUIT_SAMPLES, createRace, CRASH_RESPAWN_SECONDS, getCarPose, GHOST_SECONDS, sampleCircuit } from '../lib/circuitSimulation'
 
 describe('Circuit Run simulation', () => {
   it('creates a stable field and a continuous, closed course', () => {
@@ -9,6 +9,7 @@ describe('Circuit Run simulation', () => {
     expect(CIRCUIT_LENGTH).toBeGreaterThan(1000)
     expect(sampleCircuit(CIRCUIT_LENGTH + 12)).toMatchObject(sampleCircuit(12))
     expect(sampleCircuit(CIRCUIT_LENGTH).x).toBeCloseTo(sampleCircuit(0).x)
+    expect(createRace(8).every(car=>car.baseSpeed>=95&&car.baseSpeed<113)).toBe(true)
   })
 
   it('keeps the Imola route wide and free of track crossings', () => {
@@ -49,5 +50,23 @@ describe('Circuit Run simulation', () => {
     leader.distance = 500
     advanceRace(cars, .06)
     expect(Math.abs(follower.laneOffset)).toBeLessThan(12)
+  })
+
+  it('hides crashed cars for five seconds, then lets them ghost for two seconds',()=>{
+    const [first,second]=createRace(4).slice(0,2)
+    first.distance=100;second.distance=110
+    first.laneOffset=0;second.laneOffset=0
+    advanceRace([first,second],.06)
+    expect(first.crashTimer).toBe(CRASH_RESPAWN_SECONDS)
+    expect(second.crashTimer).toBe(CRASH_RESPAWN_SECONDS)
+    for(let frame=0;frame<84;frame++)advanceRace([first],.06)
+    expect(first.crashTimer).toBe(0)
+    expect(first.ghostTimer).toBe(GHOST_SECONDS)
+    const respawnDistance=first.distance
+    for(let frame=0;frame<10;frame++)advanceRace([first],.06)
+    expect(first.distance).toBeGreaterThan(respawnDistance)
+    expect(first.ghostTimer).toBeLessThan(GHOST_SECONDS)
+    for(let frame=0;frame<24;frame++)advanceRace([first],.06)
+    expect(first.ghostTimer).toBe(0)
   })
 })

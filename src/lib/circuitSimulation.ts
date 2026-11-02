@@ -1,5 +1,5 @@
 export type TrackSample={x:number;y:number;distance:number;angle:number;curvature:number}
-export type RaceCar={id:number;distance:number;speed:number;baseSpeed:number;laneOffset:number;passTimer:number;passDirection:number;laps:number;hue:number;accent:string}
+export type RaceCar={id:number;distance:number;speed:number;baseSpeed:number;laneOffset:number;passTimer:number;passDirection:number;laps:number;hue:number;accent:string;crashTimer:number;ghostTimer:number}
 type Point={x:number;y:number}
 type Segment={kind:'line';from:Point;to:Point}|{kind:'cubic';from:Point;c1:Point;c2:Point;to:Point}
 
@@ -22,6 +22,10 @@ const segments:Segment[]=[
   {kind:'cubic',from:{x:100,y:260},c1:{x:80,y:230},c2:{x:70,y:215},to:{x:70,y:200}},
 ]
 const palette=['#F2C14E','#E65D4F','#63A7FF','#F4EEE2','#B489E8','#37CBB0','#FF8F3D','#F06292','#A9D83F','#3C7AF7']
+export const CRASH_RESPAWN_SECONDS=5
+export const GHOST_SECONDS=2
+const COLLISION_GAP=20
+const COLLISION_LANE_GAP=9
 const distance=(a:Point,b:Point)=>Math.hypot(b.x-a.x,b.y-a.y)
 const wrapAngle=(angle:number)=>Math.atan2(Math.sin(angle),Math.cos(angle))
 
@@ -56,7 +60,7 @@ export function createRace(carCount=8,seed=2026):RaceCar[]{
   let state=seed>>>0
   const random=()=>{state=(state*1664525+1013904223)>>>0;return state/4294967296}
   const count=Math.max(4,Math.min(10,Math.round(carCount)))
-  return Array.from({length:count},(_,id)=>{const baseSpeed=79+random()*15;return{id,distance:CIRCUIT_LENGTH*(1-(id+.5)/count),speed:baseSpeed,baseSpeed,laneOffset:0,passTimer:0,passDirection:id%2===0?1:-1,laps:0,hue:Math.round(id*37+random()*14),accent:palette[id%palette.length]}})
+  return Array.from({length:count},(_,id)=>{const baseSpeed=95+random()*18;return{id,distance:CIRCUIT_LENGTH*(1-(id+.5)/count),speed:baseSpeed,baseSpeed,laneOffset:0,passTimer:0,passDirection:id%2===0?1:-1,laps:0,hue:Math.round(id*37+random()*14),accent:palette[id%palette.length],crashTimer:0,ghostTimer:0}})
 }
 
 export function getCarPose(car:RaceCar){
@@ -67,8 +71,15 @@ export function getCarPose(car:RaceCar){
 export function advanceRace(cars:RaceCar[],deltaSeconds:number){
   const dt=Math.max(0,Math.min(deltaSeconds,.06)),total=CIRCUIT_LENGTH
   if(dt===0)return
-  const targets=cars.map(car=>{
-    const pose=getCarPose(car),curvatureSpeed=Math.max(.62,1-Math.min(.38,pose.curvature*430)),ahead=cars.filter(other=>other.id!==car.id).map(other=>({other,gap:((other.distance-car.distance)%total+total)%total})).sort((a,b)=>a.gap-b.gap)[0]
+  for(const car of cars){
+    if(car.crashTimer>0){
+      car.crashTimer=Math.max(0,car.crashTimer-dt)
+      if(car.crashTimer===0){car.distance+=total*.04+car.id*26;car.speed=car.baseSpeed*.82;car.laneOffset=0;car.passTimer=0;car.ghostTimer=GHOST_SECONDS;car.laps=Math.floor(car.distance/total)}
+    }else if(car.ghostTimer>0)car.ghostTimer=Math.max(0,car.ghostTimer-dt)
+  }
+  const onTrackCars=cars.filter(car=>car.crashTimer===0)
+  const targets=onTrackCars.map(car=>{
+    const pose=getCarPose(car),curvatureSpeed=Math.max(.62,1-Math.min(.38,pose.curvature*430)),ahead=onTrackCars.filter(other=>other.id!==car.id&&other.ghostTimer===0).map(other=>({other,gap:((other.distance-car.distance)%total+total)%total})).sort((a,b)=>a.gap-b.gap)[0]
     let target=car.baseSpeed*curvatureSpeed
     car.passTimer=Math.max(0,car.passTimer-dt)
     if(ahead&&ahead.gap<86&&ahead.gap>18&&ahead.other.speed<car.baseSpeed*.985&&pose.curvature<.0032&&car.passTimer===0){car.passTimer=2.6;car.passDirection=car.id%2===0?1:-1}
@@ -76,5 +87,13 @@ export function advanceRace(cars:RaceCar[],deltaSeconds:number){
     if(ahead&&ahead.gap<30&&car.passTimer===0)target=Math.min(target,ahead.other.speed*Math.max(.55,ahead.gap/30))
     return target
   })
-  cars.forEach((car,index)=>{car.speed+=(targets[index]-car.speed)*Math.min(1,dt*(targets[index]>car.speed?1.9:3.8));car.distance+=car.speed*dt;car.laps=Math.floor(car.distance/total)})
+  onTrackCars.forEach((car,index)=>{car.speed+=(targets[index]-car.speed)*Math.min(1,dt*(targets[index]>car.speed?1.9:3.8));car.distance+=car.speed*dt;car.laps=Math.floor(car.distance/total)})
+
+  const activeCars=onTrackCars.filter(car=>car.ghostTimer===0)
+  const collided=new Set<RaceCar>()
+  for(let first=0;first<activeCars.length;first++)for(let second=first+1;second<activeCars.length;second++){
+    const a=activeCars[first],b=activeCars[second],gap=Math.abs(a.distance-b.distance),separation=Math.min(gap,total-gap)
+    if(separation<COLLISION_GAP&&Math.abs(a.laneOffset-b.laneOffset)<COLLISION_LANE_GAP){collided.add(a);collided.add(b)}
+  }
+  for(const car of collided){car.crashTimer=CRASH_RESPAWN_SECONDS;car.speed=0;car.passTimer=0;car.laneOffset=0}
 }
