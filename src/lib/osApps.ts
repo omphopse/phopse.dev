@@ -16,6 +16,6 @@ export const apps:{id:AppId;label:string;icon:typeof Code2;searchDescription:str
   {id:'resume',label:'Resume',icon:FileText,searchDescription:'Open resume information and the available resume action',searchKeywords:['CV','hire','download']},
   {id:'career',label:'Career',icon:BriefcaseBusiness,searchDescription:'Experience, education and certification overview',searchKeywords:['experience','work','education','certifications']},
   {id:'ideas',label:'Idea Lab',icon:Sparkles,searchDescription:'Product experiments and builder journey',searchKeywords:['ideas','ProjectMart','RoomLinks']},
-  {id:'contact',label:'Contact',icon:Mail,searchDescription:'Contact form and professional links',searchKeywords:['email','hire','connect']},
+  {id:'contact',label:'Contact',icon:Mail,searchDescription:'Public email address and professional links',searchKeywords:['email','hire','connect']},
   {id:'secret',label:'README',icon:Code2,searchDescription:'Portfolio easter egg',searchKeywords:['secret'],},
 ]
