@@ -15,7 +15,7 @@ Then open the local Vite URL. Useful checks: `npm run typecheck`, `npm run lint`
 
 ## Content and assets to confirm
 
-- Add a real resume PDF as `public/resume/om-phopse.pdf`, then set `links.resume` in `src/data/profile.ts` to `/resume/om-phopse.pdf`.
+- The public resume PDF is `public/omphopse.pdf`; `links.resume` points to `/omphopse.pdf` for viewing and download.
 - The Contact section displays the public email from `links.email` in `src/data/profile.ts` and opens it with the visitor's email app.
 - Confirm project implementation details, exact features, and any desired source repositories. Missing URLs are intentionally not fabricated.
 - Confirm whether the Roomlinks URL remains current before publishing it.
