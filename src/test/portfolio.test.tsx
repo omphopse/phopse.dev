@@ -33,6 +33,7 @@ describe('visitor terminal', () => {
 describe('professional portfolio', () => {
   it('renders navigation and opens a project case study', () => {
     localStorage.clear()
+    localStorage.setItem('phopse-mode', 'professional')
     render(<App />)
     expect(screen.getByRole('link', { name: 'Projects' })).toBeInTheDocument()
     fireEvent.click(screen.getAllByText('Explore case study')[0])
@@ -40,6 +41,7 @@ describe('professional portfolio', () => {
   })
   it('opens and closes the Developer OS', () => {
     localStorage.clear()
+    localStorage.setItem('phopse-mode', 'professional')
     render(<App />)
     fireEvent.click(screen.getAllByRole('button', { name: /Enter Developer OS/i })[0])
     expect(screen.getByText('Personal workspace')).toBeInTheDocument()
@@ -49,7 +51,6 @@ describe('professional portfolio', () => {
   it('opens the simulated terminal and runs a safe command', () => {
     localStorage.clear()
     render(<App />)
-    fireEvent.click(screen.getAllByRole('button', { name: /Enter Developer OS/i })[0])
     fireEvent.click(screen.getByRole('button', { name: 'Open app launcher' }))
     fireEvent.click(screen.getByRole('button', { name: 'Terminal' }))
     const input = screen.getByRole('textbox', { name: 'Terminal command' })
@@ -69,12 +70,14 @@ describe('professional portfolio', () => {
   })
   it('reports invalid contact input without pretending to send', () => {
     localStorage.clear()
+    localStorage.setItem('phopse-mode', 'professional')
     render(<App />)
     fireEvent.click(screen.getByRole('button', { name: /Send message/i }))
     expect(screen.getByRole('status')).toHaveTextContent('Check the fields')
   })
   it('keeps work, certifications, and education in separate reverse-chronological sections', () => {
     localStorage.clear()
+    localStorage.setItem('phopse-mode', 'professional')
     render(<App />)
     const work = document.getElementById('experience')!
     const certs = document.getElementById('certifications')!
@@ -96,12 +99,19 @@ describe('professional portfolio', () => {
   it('shows the same completed program and distinct career sections in Developer OS', () => {
     localStorage.clear()
     render(<App />)
-    fireEvent.click(screen.getAllByRole('button', { name: /Enter Developer OS/i })[0])
     fireEvent.click(screen.getByRole('button', { name: 'Open app launcher' }))
     fireEvent.click(screen.getByRole('button', { name: 'Career' }))
     expect(document.querySelector('.os-career')?.textContent).toContain('Elsa AI Ltd.')
     expect(screen.getByText('Completed · Aug 2026')).toBeInTheDocument()
     expect(screen.getByText('Ahmednagar College')).toBeInTheDocument()
+  })
+
+  it('opens the Developer OS by default and lets visitors exit to the portfolio', () => {
+    localStorage.clear()
+    render(<App />)
+    expect(screen.getByText('Personal workspace')).toBeInTheDocument()
+    fireEvent.click(screen.getByRole('button', { name: /Exit OS/i }))
+    expect(screen.getAllByRole('heading', { name: /I build software/i })).toHaveLength(1)
   })
 })
 

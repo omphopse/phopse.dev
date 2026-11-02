@@ -128,7 +128,7 @@ function DeveloperOS({ onExit, onCase, preferences, onPreferencesChange, onReset
 }
 
 export default function App() {
-  const [os, setOs] = useState(()=>{try{return localStorage.getItem('phopse-mode')==='os'}catch{return false}}); const [osPreferences, setOsPreferences] = useState<OsPreferences>(loadOsPreferences)
+  const [os, setOs] = useState(()=>{try{return localStorage.getItem('phopse-mode')!=='professional'}catch{return true}}); const [osPreferences, setOsPreferences] = useState<OsPreferences>(loadOsPreferences)
   const [caseProject, setCaseProject] = useState<Project|null>(null); const [mobileNav, setMobileNav] = useState(false); const [konami, setKonami] = useState(false); const [activeSection, setActiveSection] = useState('home')
   function enterOs(){setOs(true);try{localStorage.setItem('phopse-mode','os')}catch{}}
   function exitOs(){setOs(false);try{localStorage.setItem('phopse-mode','professional')}catch{}}

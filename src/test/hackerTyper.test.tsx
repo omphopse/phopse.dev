@@ -6,7 +6,6 @@ import { calculateRank, calculateScore, difficulties, missionEvents, missions } 
 function launchHackerTyper() {
   localStorage.clear()
   render(<App />)
-  fireEvent.click(screen.getAllByRole('button', { name: /Enter Developer OS/i })[0])
   fireEvent.click(screen.getByRole('button', { name: 'Open app launcher' }))
   fireEvent.click(screen.getByRole('button', { name: 'Hacker Typer' }))
 }

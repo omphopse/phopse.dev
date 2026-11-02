@@ -40,7 +40,6 @@ describe('Developer OS preferences', () => {
 
   it('opens Settings, applies changes to the OS, and saves them automatically', () => {
     render(<App />)
-    fireEvent.click(screen.getAllByRole('button', { name: /Enter Developer OS/i })[0])
     fireEvent.click(screen.getByRole('button', { name: 'Open app launcher' }))
     fireEvent.click(screen.getByRole('button', { name: /^Settings$/ }))
 
@@ -57,7 +56,6 @@ describe('Developer OS preferences', () => {
 
   it('exposes local circuit simulation controls and persists selected quality and car count', () => {
     render(<App />)
-    fireEvent.click(screen.getAllByRole('button', { name: /Enter Developer OS/i })[0])
     fireEvent.click(screen.getByRole('button', { name: 'Open app launcher' }))
     fireEvent.click(screen.getByRole('button', { name: /^Settings$/ }))
     fireEvent.click(screen.getByRole('button', { name: 'Wallpaper' }))

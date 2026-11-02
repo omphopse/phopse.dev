@@ -15,7 +15,6 @@ describe('Developer OS applications',()=>{
 
   it('registers and launches each of the five new OS applications',()=>{
     render(<App />)
-    fireEvent.click(screen.getAllByRole('button',{name:/Enter Developer OS/i})[0])
     expect(document.querySelectorAll('.desktop-icon')).toHaveLength(document.querySelectorAll('.desktop-icons .desktop-icon').length)
     expect([...document.querySelectorAll<HTMLElement>('.desktop-icon')].every(icon=>icon.classList.length===1&&icon.dataset.app)).toBe(true)
     for(const [app,label] of [['File Explorer','Portfolio File Explorer'],['Global Search','Global Search'],['Activity Monitor','Activity Monitor'],['Focus Timer','Focus Timer'],['Music Player','Music Player']]){
@@ -57,7 +56,6 @@ describe('Developer OS applications',()=>{
 
   it('navigates search selections to existing project details and registered apps',()=>{
     render(<App />)
-    fireEvent.click(screen.getAllByRole('button',{name:/Enter Developer OS/i})[0])
     const trigger=screen.getByRole('button',{name:'Search portfolio and apps'})
     fireEvent.click(trigger)
     const input=screen.getByRole('textbox',{name:'Search portfolio'})
@@ -125,7 +123,6 @@ describe('Developer OS applications',()=>{
 
   it('opens the universal search with Ctrl+K and Escape leaves the OS open',()=>{
     render(<App />)
-    fireEvent.click(screen.getAllByRole('button',{name:/Enter Developer OS/i})[0])
     fireEvent.keyDown(window,{key:'k',ctrlKey:true})
     expect(screen.getByRole('dialog',{name:'Global Search'})).toBeInTheDocument()
     fireEvent.keyDown(window,{key:'Escape'})
@@ -135,7 +132,6 @@ describe('Developer OS applications',()=>{
 
   it('does not hijack Ctrl+K from an editor and returns focus after closing search',async()=>{
     render(<App />)
-    fireEvent.click(screen.getAllByRole('button',{name:/Enter Developer OS/i})[0])
     const editor=document.createElement('input');document.body.append(editor);editor.focus()
     fireEvent.keyDown(editor,{key:'k',ctrlKey:true})
     expect(screen.queryByRole('dialog',{name:'Global Search'})).not.toBeInTheDocument()
@@ -149,7 +145,6 @@ describe('Developer OS applications',()=>{
     const original=window.matchMedia
     window.matchMedia=((query:string)=>({matches:query.includes('max-width'),media:query,onchange:null,addListener:vi.fn(),removeListener:vi.fn(),addEventListener:vi.fn(),removeEventListener:vi.fn(),dispatchEvent:vi.fn(()=>true)})) as typeof window.matchMedia
     render(<App />)
-    fireEvent.click(screen.getAllByRole('button',{name:/Enter Developer OS/i})[0])
     const appButton=await screen.findByRole('button',{name:'Focus Timer'})
     fireEvent.click(appButton)
     expect(await screen.findByRole('region',{name:'Focus Timer'})).toBeInTheDocument()
