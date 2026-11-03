@@ -1,13 +1,25 @@
 const liveries = ['#748e7c', '#b8bbb0', '#535d5d', '#ad7252']
-export const launchAt = 4000
-const waveSpacing = 174
+export const launchAt = 3000
 export const passCount = 38
 export const raceEnd = 8000
+const packSpeed = 6
+const closingAcceleration = 8
 
-export function carLaunch(index: number, portrait = false) {
-  const wave = Math.floor(index / 2)
-  return launchAt + wave * waveSpacing + (index % 2) * (portrait ? 87 : 48)
-    + Math.floor(wave / 5) * 36
+function initialGap(index: number) {
+  return 4.6 + Math.floor(index / 2) * .98 + (index % 2) * .44
+}
+
+export function carLaunch(index: number) {
+  return launchAt + 1000 * Math.sqrt(2 * initialGap(index) / closingAcceleration)
+}
+
+function cameraPosition(seconds: number) {
+  const accelerationTime = Math.max(0, seconds - launchAt / 1000)
+  const ramp = Math.min(2.5, accelerationTime)
+  const lead = Math.max(0, accelerationTime - ramp)
+  const settle = Math.min(lead, 3.5)
+  return packSpeed * seconds + closingAcceleration * ramp ** 2 / 2
+    + closingAcceleration * ramp * (settle - settle ** 3 / (3 * 3.5 ** 2))
 }
 
 export function createBootCircuit(canvas: HTMLCanvasElement) {
@@ -43,7 +55,9 @@ export function createBootCircuit(canvas: HTMLCanvasElement) {
     const horizon = h * (portrait ? .46 : .48)
     const center = w * (.5 + .014 * Math.sin(t * .68))
     const road = w * (portrait ? .53 : .42)
-    const travel = t * .21 + Math.max(0, t - 3.7) ** 1.6 * .36
+    const camera = cameraPosition(t)
+    const depthAt = (distance: number) => 1.45 / distance
+    const nextMark = (spacing: number) => (spacing - camera % spacing) % spacing
     const project = (x: number, depth: number) => [center + x * road * depth, horizon + (h - horizon) * depth]
     const strip = (color: string, left: number, right: number, near: number, far: number) =>
       shape(color, [...project(left, near), ...project(right, near), ...project(right, far), ...project(left, far)])
@@ -61,12 +75,13 @@ export function createBootCircuit(canvas: HTMLCanvasElement) {
     strip('#283032', -1.02, 1.02, 1.1, .005)
     strip('#1b2527', -.69, .69, 1.1, .005)
 
-    for (let i = 0; i < 24; i++) {
-      const phase = (i + travel * 4) % 24 / 24
-      const near = .014 + phase ** 2.45 * 1.1
-      const far = near * .91
-      strip(i % 2 ? '#a3aaa2' : '#755548', -.99, -.93, near, far)
-      strip(i % 2 ? '#a3aaa2' : '#755548', .93, .99, near, far)
+    for (let i = 24; i >= 0; i--) {
+      const distance = nextMark(.95) + i * .95
+      const near = depthAt(Math.max(.01, distance))
+      if (near > 1.4) continue
+      const far = depthAt(distance + .42)
+      strip((Math.ceil(camera / .95) + i) % 2 ? '#a3aaa2' : '#755548', -.99, -.93, near, far)
+      strip((Math.ceil(camera / .95) + i) % 2 ? '#a3aaa2' : '#755548', .93, .99, near, far)
       strip('#bac4bb', -.013, .013, near, near * .88)
       strip('#374343', -.88, .88, near, near * .991)
     }
@@ -75,7 +90,9 @@ export function createBootCircuit(canvas: HTMLCanvasElement) {
       const [edge] = project(side * 1.28, 1.15)
       shape('#263638', [center, horizon, edge, h * .8, edge, h * .85, center, horizon + 2])
       for (let i = 10; i >= 0; i--) {
-        const depth = 1 / (1.2 + ((i + 11 - travel % 11) % 11) * 1.3)
+        const distance = nextMark(5.4) + i * 5.4
+        const depth = depthAt(Math.max(.01, distance))
+        if (depth > 2) continue
         const [x, y] = project(side * 1.18, depth)
         const lampHeight = h * .52 * depth
         const arm = road * depth * .28
@@ -99,10 +116,11 @@ export function createBootCircuit(canvas: HTMLCanvasElement) {
       }
     }
 
-    const gantryDepth = Math.min(1.2, .105 + travel * .15)
+    const gantryDepth = depthAt(Math.max(.01, 32 - camera))
     const [gantryX, gantryY] = project(0, gantryDepth)
     const gantryWidth = road * gantryDepth * 2.3
     const gantryTop = gantryY - h * gantryDepth * .69
+    if (gantryDepth < 3) {
     ctx.fillStyle = '#172224'
     const post = Math.max(2, gantryWidth * .023)
     ctx.fillRect(gantryX - gantryWidth / 2, gantryTop, post, gantryY - gantryTop)
@@ -113,18 +131,15 @@ export function createBootCircuit(canvas: HTMLCanvasElement) {
       ctx.fillRect(gantryX + (i - 2.5) * post * 2.5, gantryTop + post * .45, post * 1.4, post)
     }
 
+    }
     const cars = []
     for (let i = 0; i < passCount; i++) {
-      const age = ms - carLaunch(i, portrait)
-      const lane = (i % 2 ? 1 : -1) * (.43 + (Math.floor(i / 2) % 3) * .06)
-      if (i < 4 && age < 0) cars.push({ lane, depth: .09 + Math.floor(i / 2) * .035, i, alpha: 1 })
-      const close = i === passCount - 1 || i === 14
-      const lifetime = close ? 650 : portrait ? 440 : 610
-      if (age >= 0 && age < lifetime) {
-        const progress = age / lifetime
-        const depth = .09 + (i < 4 ? Math.floor(i / 2) * .035 : 0) + progress ** 2.4 * (close ? 1.16 : .64)
-        cars.push({ lane, depth, i, alpha: Math.min(1, i < 4 ? 1 : progress * 9, (1 - progress) * 8) })
-      }
+      const distance = initialGap(i) + packSpeed * t - camera
+      if (distance <= .8) continue
+      const depth = depthAt(distance)
+      const lane = (i % 2 ? 1 : -1) * (.39 + (Math.floor(i / 2) % 3) * .072)
+      const alpha = Math.min(1, (distance - .8) / .55)
+      cars.push({ lane, depth, i, alpha })
     }
     cars.sort((a, b) => a.depth - b.depth)
     for (const { lane, depth, i, alpha } of cars) {
@@ -159,4 +174,5 @@ export function createBootCircuit(canvas: HTMLCanvasElement) {
     ctx.fillRect(0, 0, w, h)
   }
 }
+
 

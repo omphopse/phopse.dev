@@ -1,0 +1,14 @@
+.window-body:has(> .resume-viewer) { display: flex; padding: 0; overflow: hidden; }
+.resume-viewer { display: flex; flex: 1; flex-direction: column; min-width: 0; min-height: 0; color: var(--os-text); background: var(--os-surface); }
+.resume-toolbar { display: flex; flex-wrap: wrap; align-items: center; gap: 6px 12px; padding: 8px 12px; border-bottom: 1px solid var(--os-border); font-size: 12px; }
+.resume-toolbar strong { flex: 1 1 100%; color: var(--os-accent); }
+.resume-tools { display: flex; flex-wrap: wrap; align-items: center; gap: 5px; }
+.resume-tools :is(button, a), .resume-message button { display: inline-flex; align-items: center; gap: 5px; min-height: 32px; padding: 4px 7px; border: 1px solid var(--os-border); border-radius: 5px; background: var(--os-surface); color: var(--os-accent); font-size: 11px; cursor: pointer; }
+.resume-tools button:disabled { opacity: .45; cursor: default; }
+.resume-document { flex: 1; min-height: 0; overflow: auto; overscroll-behavior: contain; scrollbar-gutter: stable; background: var(--os-window-bg); }
+.resume-pages { width: max-content; min-width: 100%; padding: 12px; }
+.resume-pages canvas { display: block; margin: 0 auto 12px; background: white; box-shadow: 0 2px 8px #001b1529; }
+.resume-message { padding: 12px; text-align: center; }
+.mobile-panel:has(> .resume-viewer) { display: flex; flex-direction: column; overflow: hidden; }
+.mobile-panel:has(> .resume-viewer) .mobile-panel-head { flex-shrink: 0; }
+.mobile-panel .resume-viewer { flex: 1; min-height: 0; }

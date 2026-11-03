@@ -1,7 +1,7 @@
 import { carLaunch, launchAt, raceEnd } from './bootCircuit'
 
 const engineVolume = 0.50
-const passIndexes = [3, 9, 14, 22, 29, 37]
+const passIndexes = [0, 7, 17, 31]
 
 export function startEngine(getElapsed: () => number) {
   if (getElapsed() >= raceEnd - 150) return null
@@ -30,7 +30,7 @@ export function startEngine(getElapsed: () => number) {
       const master = audio.createGain()
       master.gain.setValueAtTime(0.001, now)
       // Hold the mix through the launch, then fade along the visual timeline.
-      const fadeStart = 6100
+      const fadeStart = 5200
       const levelAt = (ms: number) => {
         const progress = Math.max(0, Math.min(1, (ms - fadeStart) / (raceEnd - fadeStart)))
         return engineVolume * (.001 / engineVolume) ** progress
@@ -71,7 +71,7 @@ export function startEngine(getElapsed: () => number) {
         const pitch = (ms: number) => {
           const buildup = Math.min(1, ms / launchAt)
           const acceleration = Math.max(0, Math.min(1, (ms - launchAt + 240 - i * 52) / 900))
-          const recede = Math.max(0, (ms - 5650) / 2600)
+          const recede = Math.max(0, (ms - 4750) / 3400)
           const rev = Math.sin(ms / (215 + i * 23) + i * 2.1)
           return base * (1 + buildup * .43 + acceleration * .89 - recede * .95 + rev * .09)
         }
@@ -90,16 +90,16 @@ export function startEngine(getElapsed: () => number) {
       const pan = audio.createStereoPanner()
       pass.connect(envelope).connect(pan).connect(filter)
       for (const index of passIndexes) {
-        const cue = now + (carLaunch(index) + 380 - elapsed) / 1000
-        if (cue < now || cue + .26 > end) continue
+        const cue = now + (carLaunch(index) - 245 - elapsed) / 1000
+        if (cue < now || cue + .19 > end) continue
         const side = index % 2 ? 1 : -1
         pan.pan.setValueAtTime(side * .15, cue)
-        pan.pan.linearRampToValueAtTime(side * .72, cue + .26)
+        pan.pan.linearRampToValueAtTime(side * .72, cue + .19)
         pass.frequency.setValueAtTime(204 + index % 7 * 9, cue)
-        pass.frequency.exponentialRampToValueAtTime(120, cue + .26)
+        pass.frequency.exponentialRampToValueAtTime(120, cue + .19)
         envelope.gain.setValueAtTime(.001, cue)
-        envelope.gain.exponentialRampToValueAtTime(index === 37 ? .34 : .21, cue + .1)
-        envelope.gain.exponentialRampToValueAtTime(.001, cue + .26)
+        envelope.gain.exponentialRampToValueAtTime(index === 31 ? .34 : .21, cue + .1)
+        envelope.gain.exponentialRampToValueAtTime(.001, cue + .19)
       }
       pass.start(now)
       pass.stop(end)
@@ -112,4 +112,5 @@ export function startEngine(getElapsed: () => number) {
 
   return { ready, stop }
 }
+
 
