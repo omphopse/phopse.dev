@@ -1,0 +1,85 @@
+html:has(.boot-intro[open]) { overflow: hidden; }
+
+.boot-intro {
+  position: fixed;
+  inset: 0;
+  width: 100%;
+  height: 100%;
+  height: 100dvh;
+  max-width: none;
+  max-height: none;
+  margin: 0;
+  padding: 0;
+  border: 0;
+  overflow: hidden;
+  overscroll-behavior: contain;
+  background: #080e0d;
+  color: #f3eee0;
+  animation: boot-reveal var(--boot-fade) ease var(--boot-fade-at) both;
+}
+
+.boot-intro::backdrop { background: transparent; }
+.boot-circuit { display: block; width: 100%; height: 100%; }
+
+.boot-brand {
+  position: absolute;
+  left: 50%;
+  top: 27%;
+  transform: translate(-50%, -50%);
+  text-align: center;
+  white-space: nowrap;
+  animation: boot-title 2.55s ease both;
+}
+
+.boot-brand small {
+  display: block;
+  color: #c7cbbf;
+  font: 10px ui-monospace, monospace;
+  letter-spacing: .48em;
+}
+
+.boot-brand strong {
+  display: block;
+  margin-top: 12px;
+  font-size: clamp(28px, 5vw, 60px);
+  line-height: 1;
+  font-weight: 500;
+  letter-spacing: -.065em;
+}
+
+.boot-controls {
+  position: absolute;
+  inset-inline: max(16px, env(safe-area-inset-left)) max(16px, env(safe-area-inset-right));
+  bottom: max(18px, env(safe-area-inset-bottom));
+  display: flex;
+  flex-wrap: wrap;
+  justify-content: space-between;
+  gap: 8px;
+}
+
+.boot-controls button {
+  min-height: 44px;
+  padding: 8px 14px;
+  border: 1px solid #84918a;
+  border-radius: 4px;
+  background: #101817e8;
+  color: inherit;
+  font: 12px ui-monospace, monospace;
+  cursor: pointer;
+}
+
+.boot-controls button:focus-visible { outline: 2px solid #efab83; outline-offset: 3px; }
+.boot-reduced .boot-brand { top: 50%; animation: none; }
+
+@media (orientation: portrait) {
+  .boot-brand { top: 25%; }
+}
+
+@keyframes boot-title {
+  0% { opacity: 0; }
+  35%, 68% { opacity: 1; }
+  100% { opacity: 0; }
+}
+
+@keyframes boot-reveal { from { opacity: 1; } to { opacity: 0; } }
+.boot-sound { display: inline-flex; align-items: center; gap: 8px; }
